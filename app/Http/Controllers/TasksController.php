@@ -15,7 +15,7 @@ class TasksController extends Controller
     public function index()
     {
         //
-        return Task::all();
+        return Task::where('user_id', auth()->user()->id)->get();
     }
 
     /**
@@ -42,7 +42,11 @@ class TasksController extends Controller
         ]);
         
 
-        $todo= Task::create($data);
+        $todo= Task::create([
+            'task'=> $request->task,
+            'done'=> $request->done,
+            'user_id'=> auth()->user()->id,
+        ]);
         return response($todo, 200);
         // return response($request);
     }
@@ -78,6 +82,9 @@ class TasksController extends Controller
      */
     public function update(Request $request, Task $task)
     {
+        if ($task->user_id !== auth()->user()->id) {
+            return response()->json('unauthorized', 401);
+        }
         $data=$request->validate([
             'task'=> 'required|string',
             'done'=> 'required|boolean'
@@ -95,6 +102,9 @@ class TasksController extends Controller
      */
     public function destroy(Task $task)
     {
+        if ($task->user_id !== auth()->user()->id) {
+            return response()->json('unauthorized', 401);
+        }
         $task->delete();
         return response('task deleted'. 200);
     }
